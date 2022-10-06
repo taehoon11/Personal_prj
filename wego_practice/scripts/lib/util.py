@@ -114,7 +114,7 @@ def findLocalPath(ref_path,Avoid_Radius,safety_distance,obj_pos_x,obj_pos_y):
     t_idx_min = min(threshold)      # 저장된 인덱스 중 최대 최소 추출
     t_idx_max = max(threshold)      # 최소~최대 인덱스 사이의 점들은 밀어내야 하기 때문입니다.
 
-    for i in range(t_idx_min,t_idx_max+300): # 앞서 구한 인덱스를 기반으로 Local Path를 구합니다.
+    for i in range(t_idx_min,t_idx_max+100): # 앞서 구한 인덱스를 기반으로 Local Path를 구합니다.
         pose = []
         dist = sqrt(pow((ref_path[i][0]-obj_pos_x),2)+pow((ref_path[i][1]-obj_pos_y),2)) 
         if i < t_idx_max and dist <= Avoid_Radius+safety_distance:
