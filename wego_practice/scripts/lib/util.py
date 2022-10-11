@@ -105,29 +105,26 @@ def findLocalPath(ref_path,Avoid_Radius,safety_distance,obj_pos_x,obj_pos_y):
     t_idx_min = 0
     t_idx_max = 0
 
-    for i in range(len(ref_path)): #Global path를 탐색하며 Threshold 안에 속한 waypoint의 index를 찾습니다.
-        dx = ref_path[i][0] - obj_pos_x # 시점:장애물, 종점:Waypoint인 벡터 생성 
+    for i in range(len(ref_path)): 
+        dx = ref_path[i][0] - obj_pos_x 
         dy = ref_path[i][1] - obj_pos_y
-        dis = sqrt(dx*dx + dy*dy)    # 벡터 크기 구하기
-        if dis < Avoid_Radius+safety_distance:    # Threshold 원의 반지름보다 작다면
-            threshold.append(i)     # 인덱스 저장
-    t_idx_min = min(threshold)      # 저장된 인덱스 중 최대 최소 추출
-    t_idx_max = max(threshold)      # 최소~최대 인덱스 사이의 점들은 밀어내야 하기 때문입니다.
+        dis = sqrt(dx*dx + dy*dy)    
+        if dis < Avoid_Radius+safety_distance:  
+            threshold.append(i)     
+    t_idx_min = min(threshold)      
+    t_idx_max = max(threshold)      
 
-    for i in range(t_idx_min,t_idx_max+100): # 앞서 구한 인덱스를 기반으로 Local Path를 구합니다.
+    for i in range(t_idx_min,t_idx_max+200): 
         pose = []
         dist = sqrt(pow((ref_path[i][0]-obj_pos_x),2)+pow((ref_path[i][1]-obj_pos_y),2)) 
         if i < t_idx_max and dist <= Avoid_Radius+safety_distance:
-            newpoint_x = ref_path[i][0] - obj_pos_x  # 장애물 벡터를 구합니다.
+            newpoint_x = ref_path[i][0] - obj_pos_x  
             newpoint_y = ref_path[i][1] - obj_pos_y 
-            L = sqrt(pow(newpoint_x,2)+pow(newpoint_y,2))  # 크기를 구합니다.
-            slid_ang = atan2(newpoint_y,newpoint_x)      # 벡터의 위상을 구합니다.
-            newpoint_x = (Avoid_Radius-L+safety_distance)*cos(slid_ang) + newpoint_x # waypoint를 밀어줍니다.
-            newpoint_y = (Avoid_Radius-L+safety_distance)*sin(slid_ang) + newpoint_y
+            slid_ang = atan2(newpoint_y,newpoint_x)      
+            newpoint_x = (Avoid_Radius+safety_distance)*cos(slid_ang) + obj_pos_x
+            newpoint_y = (Avoid_Radius+safety_distance)*sin(slid_ang) + obj_pos_y
             
-            newpoint_x = newpoint_x + ref_path[i][0]
-            newpoint_y = newpoint_y + ref_path[i][1]
-            pose.append(newpoint_x) # Local Path에 추가해줍니다.
+            pose.append(newpoint_x) 
             pose.append(newpoint_y)
             out_path.append(pose)      
         else:
@@ -135,4 +132,103 @@ def findLocalPath(ref_path,Avoid_Radius,safety_distance,obj_pos_x,obj_pos_y):
             pose.append(ref_path[i][1])              
             out_path.append(pose)
 
-    return out_path   # Local Path를 산출합니다.
+    return out_path 
+
+def findLocalPath2(ref_path,Avoid_Radius,safety_distance,obj_pos_x,obj_pos_y):
+    out_path=[]
+    threshold = []
+
+    min_dis = float("inf")
+    min_idx = 0
+    t_idx_min = 0
+    t_idx_max = 0
+
+    for i in range(len(ref_path)): 
+        dx = ref_path[i][0] - obj_pos_x 
+        dy = ref_path[i][1] - obj_pos_y
+        dis = sqrt(dx*dx + dy*dy)   
+        if dis < Avoid_Radius+safety_distance:    
+            threshold.append(i)
+            if dis < min_dis:
+                min_dis = dis
+                min_idx = i
+
+    t_idx_min = min(threshold)      
+    t_idx_max = max(threshold)
+
+    min_data= []
+    max_data = []
+    rel_min_obj_x = ref_path[t_idx_min][0] - obj_pos_x  
+    rel_min_obj_y = ref_path[t_idx_min][1] - obj_pos_y
+    slid_ang_min = atan2(rel_min_obj_y,rel_min_obj_x)
+
+    rel_max_obj_x = ref_path[t_idx_max][0] - obj_pos_x
+    rel_max_obj_y = ref_path[t_idx_max][1] - obj_pos_y
+    slid_ang_max = atan2(rel_max_obj_y,rel_max_obj_x)
+    
+    min_data.append((Avoid_Radius+safety_distance)*cos(slid_ang_min) + obj_pos_x)
+    min_data.append((Avoid_Radius+safety_distance)*sin(slid_ang_min) + obj_pos_y)
+    out_path.append(min_data)
+
+    max_data.append((Avoid_Radius+safety_distance)*cos(slid_ang_max) + obj_pos_x)
+    max_data.append((Avoid_Radius+safety_distance)*sin(slid_ang_max) + obj_pos_y)
+
+    gamma = atan2(max_data[1]-min_data[1],max_data[0]-min_data[0])
+    min_idx_deg = atan2(min_data[1]-obj_pos_y,min_data[0]-obj_pos_x)*180/pi
+    max_idx_deg = atan2(max_data[1]-obj_pos_y,max_data[0]-obj_pos_x)*180/pi
+    #print(min_idx_deg)
+    #print(max_idx_deg)
+    if min_idx_deg < 0:
+        min_idx_deg = 360 + min_idx_deg
+    if max_idx_deg < 0:
+        max_idx_deg = 360 + max_idx_deg
+
+    #print(min_idx_deg)
+    #print(max_idx_deg)
+
+    mini_vector = [ref_path[min_idx][0],ref_path[min_idx][1]]
+    dot_p = -1*mini_vector[0]*sin(gamma) + mini_vector[1]*cos(gamma)
+
+    if dot_p >= 0:
+        if min_idx_deg > max_idx_deg:
+            ctn = int(min_idx_deg) - int(max_idx_deg)
+        else:
+            ctn = int(min_idx_deg) + 360 - int(max_idx_deg)
+
+        for j in range(1,ctn):
+            pose = []
+            ang = (min_idx_deg - j)*pi/180
+            x = (Avoid_Radius+safety_distance)*sin(ang)
+            y = (Avoid_Radius+safety_distance)*cos(ang)
+            x = x + obj_pos_x
+            y = y + obj_pos_y
+            pose.append(x)
+            pose.append(y)
+            out_path.append(pose)
+
+    elif dot_p < 0:
+        if min_idx_deg > max_idx_deg:
+            ctn = 360 - int(min_idx_deg) + int(max_idx_deg)
+        else:
+            ctn = int(max_idx_deg) - int(min_idx_deg)
+
+        for i in range(1,ctn):
+            pose = []
+            ang = (min_idx_deg + i)*pi/180
+            x = (Avoid_Radius+safety_distance)*sin(ang)
+            y = (Avoid_Radius+safety_distance)*cos(ang)
+            x = x + obj_pos_x
+            y = y + obj_pos_y
+            pose.append(x)
+            pose.append(y)
+            out_path.append(pose)
+
+    out_path.append(max_data)
+    #print(ctn)
+    for i in range(t_idx_max+1,t_idx_max+100): 
+        pose = []
+        pose.append(ref_path[i][0])
+        pose.append(ref_path[i][1])              
+        out_path.append(pose)
+
+    return out_path 

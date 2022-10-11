@@ -1,5 +1,5 @@
 from lib.morai_udp_parser import udp_parser,udp_sender
-from lib.util import pathReader,findLocalPath,purePursuit,Point
+from lib.util import pathReader,findLocalPath,purePursuit,Point,findLocalPath2
 from math import cos,sin,sqrt,pow,atan2,pi
 import time
 import threading
@@ -32,8 +32,8 @@ class ppfinal :
         self.status=udp_parser(user_ip, params["vehicle_status_dst_port"],'erp_status')
         self.obj=udp_parser(user_ip, params["object_info_dst_port"],'erp_obj')
         self.ctrl_cmd=udp_sender(host_ip,params["ctrl_cmd_host_port"],'erp_ctrl_cmd')
-        self.safety_distance = 4
-        self.dis4change_path = 5
+        self.safety_distance = 3
+        self.dis4change_path = 7
         self.txt_reader=pathReader()
         self.global_path=self.txt_reader.read('test_path.txt') 
         self.pure_pursuit=purePursuit() 
@@ -72,6 +72,8 @@ class ppfinal :
         heading=status_data[17]     
         velocity=status_data[18]
 
+
+
         ctrl_mode = 2 
         Gear = 4 
         cmd_type = 1     
@@ -82,6 +84,7 @@ class ppfinal :
 
         if obj_data != []:
             change_obj_id= []
+            len_ob2car = []
             for i in range(len(obj_data)):
                 data = obj_data[i]
                 change_obj_id.append(data[0]) ## id-2 = index
@@ -90,24 +93,27 @@ class ppfinal :
                     obj_id.append(data[0]) ## id-2 = index
                     Avoid_Radius = sqrt(pow(data[6],2)+pow(data[7],2))
                     obj_con.append(Avoid_Radius)
-                    local_path.append(findLocalPath(self.global_path,Avoid_Radius,self.safety_distance,data[2],data[3]))
+                    local_path.append(findLocalPath2(self.global_path,Avoid_Radius,self.safety_distance,data[2],data[3]))
 
 
-        if obj_con !=[]:
+        if obj_con !=[] and len_ob2car != []:
             wait = float("inf")
+            idx = change_obj_id[0]
             for i in range(len(obj_con)):
-                if min(len_ob2car) < obj_con[i] + self.dis4change_path:
-                    
+                if min(len_ob2car) < obj_con[idx-2] + self.dis4change_path:
                     wait = min(len_ob2car)
                     mem_idx = change_obj_id[0]-2
                 if wait !=float("inf"):
+                    #print(wait)
+                    #print(len(local_path[0]))
                     self.pure_pursuit.getPath(local_path[mem_idx])
+
                     accel = 0.5
 
 
                 else:
                     self.pure_pursuit.getPath(self.global_path)
-                    
+
 
         elif obj_data != []:
             self.pure_pursuit.getPath(self.global_path)
@@ -116,7 +122,7 @@ class ppfinal :
         self.pure_pursuit.getEgoStatus(position_x,position_y,position_z,velocity,heading)
         steering_angle=self.pure_pursuit.steering_angle() 
         self.ctrl_cmd.send_data([ctrl_mode,Gear,cmd_type,send_velocity,acceleration,accel,brake,steering_angle])
-        len_ob2car = []
+        
 
 
 if __name__ == "__main__":
