@@ -3,7 +3,7 @@
 import sys
 import numpy as np
 from lib.morai_udp_parser import udp_parser,udp_sender
-from lib.util import pathReader,findLocalPath,purePursuit,Point
+from lib.stanley_util import pathReader,Stanley,Point,findLocalPath
 from math import cos,sin,sqrt,pow,atan2,pi
 import time
 import threading
@@ -33,7 +33,7 @@ class planner :
         self.txt_reader=pathReader()
         self.global_path=self.txt_reader.read('test_path.txt')  # read method >> load x,y,z coord of global path
 
-        self.pure_pursuit=purePursuit() 
+        self.stanley=Stanley() 
   
 
         self._is_status=False
@@ -61,10 +61,10 @@ class planner :
         velocity=status_data[18]
 
     
-        #local_path,current_point =findLocalPath(self.global_path,position_x,position_y)
+        local_path,current_point =findLocalPath(self.global_path,position_x,position_y)
         #####
-        self.pure_pursuit.getPath(self.global_path)
-        self.pure_pursuit.getEgoStatus(position_x,position_y,position_z,velocity,heading)
+        self.stanley.getPath(self.global_path)
+        self.stanley.getEgoStatus(position_x,position_y,position_z,velocity,heading)
 
 
         
@@ -79,8 +79,8 @@ class planner :
         accel=1
         brake=0
 
-        steering_angle=self.pure_pursuit.steering_angle() # deg
-        
+        steering_angle=self.stanley.steering_angle() # deg
+        print(steering_angle)
         self.ctrl_cmd.send_data([ctrl_mode,Gear,cmd_type,send_velocity,acceleration,accel,brake,steering_angle])     
 
 if __name__ == "__main__":
