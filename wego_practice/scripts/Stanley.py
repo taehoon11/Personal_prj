@@ -63,7 +63,7 @@ class planner :
     
         local_path,current_point =findLocalPath(self.global_path,position_x,position_y)
         #####
-        self.stanley.getPath(self.global_path)
+        self.stanley.getPath(local_path)
         self.stanley.getEgoStatus(position_x,position_y,position_z,velocity,heading)
 
 

@@ -40,7 +40,7 @@ class pathReader :
 
 class Stanley :
     def __init__(self):
-        self.control_gain = 0.1
+        self.control_gain = 2
         self.forward_point=Point()
         self.current_postion=Point()
         self.vehicle_length=2
@@ -88,11 +88,14 @@ class Stanley :
             tangency = atan2(self.path[min_idx][1]-self.path[min_idx-1][1],self.path[min_idx][0]-self.path[min_idx-1][0])
 
         psi = tangency - self.vehicle_yaw
-        #print("psi : ",psi)
-        #normal_off =  sqrt(pow(self.path[min_idx][1]-front_y,2)+pow(self.path[min_idx][0]-front_x,2))
-        cte = atan2(self.control_gain*min_dist,self.current_vel)
+        vectorr = [cos(self.vehicle_yaw + pi/2), sin(self.vehicle_yaw + pi/2)]
+        dx = self.path[min_idx][0] - front_x
+        dy = self.path[min_idx][1] - front_y
+        cte = np.dot([dx,dy],vectorr)
+        cte_term = atan2(self.control_gain*cte,self.current_vel)
+        print(cte_term)
         #print(min_dist)
-        self.steering = psi + cte
+        self.steering = psi + cte_term
         #print(self.steering)
 
         while self.steering > pi:
@@ -102,7 +105,7 @@ class Stanley :
             self.steering += 2.0*pi
 
         self.steering = -1*np.clip(self.steering,self.min_steer,self.max_steer)
-        print(self.steering)
+        #print(self.steering)
 
         return self.steering
         
