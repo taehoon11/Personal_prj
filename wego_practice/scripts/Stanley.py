@@ -73,14 +73,14 @@ class planner :
         Gear = 4 # 4 1 : (P / parking ) 2 (R / reverse) 3 (N / Neutral)  4 : (D / Drive) 5 : (L)
 
         cmd_type = 1 # 1 : Throttle  /  2 : Velocity  /  3 : Acceleration        
-        send_velocity = 0 #cmd_type이 2일때 원하는 속도를 넣어준다.
-        acceleration = 0 #cmd_type이 3일때 원하는 가속도를 넣어준다.
+        send_velocity = 0 
+        acceleration = 0 
         
         accel=1
         brake=0
 
-        steering_angle=self.stanley.steering_angle() # deg
-        print(steering_angle)
+        steering_angle=self.stanley.steering_angle() # rad
+        #print(steering_angle)
         self.ctrl_cmd.send_data([ctrl_mode,Gear,cmd_type,send_velocity,acceleration,accel,brake,steering_angle])     
 
 if __name__ == "__main__":

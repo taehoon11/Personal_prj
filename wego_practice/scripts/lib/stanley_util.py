@@ -88,15 +88,13 @@ class Stanley :
             tangency = atan2(self.path[min_idx][1]-self.path[min_idx-1][1],self.path[min_idx][0]-self.path[min_idx-1][0])
 
         psi = tangency - self.vehicle_yaw
-        vectorr = [cos(self.vehicle_yaw + pi/2), sin(self.vehicle_yaw + pi/2)]
+        vectorr = [cos(tangency + pi/2), sin(tangency + pi/2)]
         dx = self.path[min_idx][0] - front_x
         dy = self.path[min_idx][1] - front_y
         cte = np.dot([dx,dy],vectorr)
         cte_term = atan2(self.control_gain*cte,self.current_vel)
-        print(cte_term)
-        #print(min_dist)
         self.steering = psi + cte_term
-        #print(self.steering)
+
 
         while self.steering > pi:
             self.steering -= 2.0*pi
@@ -105,7 +103,6 @@ class Stanley :
             self.steering += 2.0*pi
 
         self.steering = -1*np.clip(self.steering,self.min_steer,self.max_steer)
-        #print(self.steering)
 
         return self.steering
         
