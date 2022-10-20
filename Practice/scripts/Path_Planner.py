@@ -33,7 +33,6 @@ class ppfinal :
         self.global_path=self.txt_reader.read('test_path.txt') 
         self.pure_pursuit=purePursuit() 
   
-
         self._is_status=False
         while not self._is_status :
             if not self.status.get_data() :
@@ -63,6 +62,7 @@ class ppfinal :
         position_z=status_data[14]
         heading=status_data[17]     
         velocity=status_data[18]
+        #print(position_x)
 
         if obj_data != []:
             obj_data= obj_data[0]
@@ -99,8 +99,10 @@ class ppfinal :
         brake=0
 
         steering_angle=self.pure_pursuit.steering_angle() 
-        self.ctrl_cmd.send_data([ctrl_mode,Gear,cmd_type,send_velocity,acceleration,accel,brake,steering_angle])
-            
+        a,t = self.ctrl_cmd.send_data([ctrl_mode,Gear,cmd_type,send_velocity,acceleration,accel,brake,steering_angle])
+        print(t[1],"\n")
+ 
+
 
 if __name__ == "__main__":
 

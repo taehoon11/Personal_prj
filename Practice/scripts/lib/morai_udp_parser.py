@@ -132,3 +132,4 @@ class udp_sender :
             send_data = self.upper + lower + self.tail
         
         self.sock.sendto(send_data, (self.ip, self.port))
+        return send_data, self.tail
